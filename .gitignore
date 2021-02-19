@@ -32,6 +32,6 @@ build/
 ### VS Code ###
 .vscode/
 
-.study.iml
-/study-algorithms/study-algorithms.iml
 /study-algorithms/build/
+/study-leetcode/build/
+/study-data-structures/build/
