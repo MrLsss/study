@@ -56,6 +56,12 @@ public class MyArrayList<E> implements MyList<E>, Serializable {
         this.elementData = DEFAULT_CAPACITY_EMPTY_ELEMENT_DATA;
     }
 
+    /**
+     * 有参构造方法
+     * 如果 capacity 大于0，则使用capacity作为容量
+     * 如果 capacity 等于0，则使用 EMPTY_ELEMENT_DATA 作为初始容量，在这里就和无参构造方法区分开了
+     * @param capacity 初始容量
+     */
     public MyArrayList(int capacity) {
         if (capacity > 0) {
             this.elementData = new Object[capacity];
