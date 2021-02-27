@@ -7,3 +7,5 @@
 - [leetcode](https://github.com/MrLsss/study/tree/main/study-leetcode/src/main/java/com/study)
 
 - [rabbitmq](https://github.com/MrLsss/study/tree/main/study-rabbitmq)
+
+- [数据库](https://github.com/MrLsss/study/tree/main/study-sql)
