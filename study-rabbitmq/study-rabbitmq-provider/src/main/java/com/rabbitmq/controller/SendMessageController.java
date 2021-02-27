@@ -35,8 +35,27 @@ public class SendMessageController {
         json.put("messageId",messageId);
         json.put("messageData",messageData);
         json.put("createTime",createTime);
+        // 开启事务
+//        rabbitTemplate.setChannelTransacted(true);
         //将消息携带绑定键值：TestDirectRouting 发送到交换机TestDirectExchange
-        rabbitTemplate.convertAndSend("TestDirectExchange", "TestDirectRouting", json);
+        rabbitTemplate.convertAndSend("TestDirectExchange", "TestDirectRouting1", json);
+        JSONObject res = new JSONObject();
+        res.put("data", "发送成功！");
+        res.put("success", true);
+        return res;
+    }
+
+    @GetMapping("/sendDirectMessage1")
+    public JSONObject sendDirectMessage1() {
+        String messageId = String.valueOf(UUID.randomUUID());
+        String messageData = "test message, hello!";
+        String createTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        Map<String, String> json = new HashMap<>();
+        json.put("messageId",messageId);
+        json.put("messageData",messageData);
+        json.put("createTime",createTime);
+        //将消息携带绑定键值：TestDirectRouting 发送到交换机TestDirectExchange
+        rabbitTemplate.convertAndSend("TestDirectExchange", "TestDirectRouting2", json);
         JSONObject res = new JSONObject();
         res.put("data", "发送成功！");
         res.put("success", true);

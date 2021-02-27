@@ -23,13 +23,13 @@ public class RabbitConfig {
      * ②消息推送到server，找到交换机了，但是没找到队列
      * ③消息推送到sever，交换机和队列啥都没找到
      * ④消息推送成功
-     * @{link CallBackController} 对应四种情况
+     * {@link com.rabbitmq.controller.CallBackController} 对应四种情况
      *
      * 结论：
      * ①这种情况触发的是 ConfirmCallback 回调函数
      * ②这种情况触发的是 ConfirmCallback和ReturnsCallback两个回调函数
      *      1.这种情况下，消息是推送成功到服务器了的，所以ConfirmCallback对消息确认情况是true；
-     *      2.而在RetrunCallback回调函数的打印参数里面可以看到，消息是推送到了交换机成功了，
+     *      2.而在ReturnCallback回调函数的打印参数里面可以看到，消息是推送到了交换机成功了，
      *      但是在路由分发给队列的时候，找不到队列，所以报了错误 NO_ROUTE 。
      * ③这种情况触发的是 ConfirmCallback 回调函数。
      *      这种情况其实一看就觉得跟①很像，没错 ，③和①情况回调是一致的
@@ -44,10 +44,17 @@ public class RabbitConfig {
 
         rabbitTemplate.setConfirmCallback(new RabbitTemplate.ConfirmCallback() {
             @Override
-            public void confirm(CorrelationData correlationData, boolean b, String s) {
-                System.out.println("ConfirmCallback:    " + "相关数据：" + correlationData);
-                System.out.println("ConfirmCallback:    " + "确认情况：" + b);
-                System.out.println("ConfirmCallback:    " + "原因：" + s);
+            public void confirm(CorrelationData correlationData, boolean ack, String s) {
+                if (ack) { // 如果发送交换机成功，但是没有匹配路由到指定的队列，这个时候ack返回是true，后面会说到
+                    System.out.println("生产者ACK成功:" + correlationData.getId());
+                } else {
+                    // 注意: 不能调用rabbitTemplate发送,会导致线程死锁
+                    // rabbitTemplate.convertAndSend();
+                    // 解决办法 errorCorrelationData放入缓存. 让定时任务轮询发送.
+                    System.out.println("ConfirmCallback:    " + "相关数据：" + correlationData);
+                    System.out.println("ConfirmCallback:    " + "确认情况：" + ack);
+                    System.out.println("ConfirmCallback:    " + "原因：" + s);
+                }
             }
         });
 

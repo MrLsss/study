@@ -12,11 +12,18 @@
 // * @createTime 2021年02月24日 23:26
 // */
 //@Component
-//@RabbitListener(queues = "TestDirectQueue") // 监听的队列名称
 //public class DirectReceiver {
 //
+//    @RabbitListener(queues = "TestDirectQueue1") // 监听的队列名称
 //    @RabbitHandler
 //    public void handler(JSONObject testMessage) {
-//        System.out.println("DirectReceiver消费者收到消息：" + testMessage.toJSONString());
+//        System.out.println("DirectReceiver消费者收到TestDirectQueue1消息：" + testMessage.toJSONString());
 //    }
+//
+//    @RabbitListener(queues = "TestDirectQueue2")
+//    @RabbitHandler
+//    public void handler2(JSONObject testMessage) {
+//        System.out.println("DirectReceiver消费者收到TestDirectQueue2消息：" + testMessage.toJSONString());
+//    }
+//
 //}
