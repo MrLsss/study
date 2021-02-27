@@ -21,6 +21,9 @@
         <module>study-leetcode</module>
         <module>study-data-structures</module>
         <module>study-java</module>
+        <module>study-rabbitmq</module>
+<!--        <module>study-rabbitmq/study-rabbitmq-consumer</module>-->
+<!--        <module>study-rabbitmq/study-rabbitmq-provider</module>-->
     </modules>
 
     <properties>

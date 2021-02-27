@@ -9,17 +9,13 @@
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.rabbitmq</groupId>
-    <artifactId>study-rabbitmq-consumer</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>study-rabbitmq-consumer</name>
-    <description>rabbitmq 消费者</description>
+    <artifactId>study-rabbitmq</artifactId>
+    <name>study-rabbitmq</name>
+    <description>rabbitmq学习</description>
+    <packaging>pom</packaging>
 
-    <dependencies>
-        <!--rabbitmq-->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-amqp</artifactId>
-        </dependency>
-    </dependencies>
-
+    <modules>
+        <module>study-rabbitmq-provider</module>
+        <module>study-rabbitmq-consumer</module>
+    </modules>
 </project>

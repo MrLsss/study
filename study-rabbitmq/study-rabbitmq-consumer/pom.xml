@@ -2,31 +2,22 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>study</artifactId>
-        <groupId>com.study</groupId>
+        <artifactId>study-rabbitmq</artifactId>
+        <groupId>com.rabbitmq</groupId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.rabbitmq</groupId>
-    <artifactId>study-rabbitmq-provider</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>study-rabbitmq-provider</name>
-    <description>rabbitmq 生产者</description>
+    <artifactId>study-rabbitmq-consumer</artifactId>
+    <name>study-rabbitmq-consumer</name>
+    <description>rabbitmq 消费者</description>
 
     <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
         <!--rabbitmq-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
     </dependencies>
-
 
 </project>
