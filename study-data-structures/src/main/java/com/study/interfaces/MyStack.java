@@ -1,7 +1,8 @@
-package com.study.list;
+package com.study.interfaces;
 
 /**
  * 栈接口
+ * 推荐使用{@link MyDeque}
  */
 public interface MyStack<E> {
 

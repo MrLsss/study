@@ -1,4 +1,4 @@
-package com.study.list;
+package com.study.interfaces;
 
 /**
  * list接口
