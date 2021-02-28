@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.4.1</version>
+        <version>2.2.1.RELEASE</version>
         <relativePath/>
     </parent>
 
@@ -22,8 +22,7 @@
         <module>study-data-structures</module>
         <module>study-java</module>
         <module>study-rabbitmq</module>
-<!--        <module>study-rabbitmq/study-rabbitmq-consumer</module>-->
-<!--        <module>study-rabbitmq/study-rabbitmq-provider</module>-->
+        <module>study-quartz</module>
     </modules>
 
     <properties>
@@ -40,6 +39,14 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!--
+            spring集成quartz
+        -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context-support</artifactId>
         </dependency>
 
         <dependency>
