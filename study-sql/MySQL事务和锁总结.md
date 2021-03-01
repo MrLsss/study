@@ -1,4 +1,4 @@
-# MySQL事务总结
+# MySQL事务和锁总结
 
 > 事务是指满足ACID特性的一组操作，可以通过commit提交一个事务，也可以通过rollback回滚一个事务
 

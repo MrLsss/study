@@ -23,6 +23,7 @@
         <module>study-java</module>
         <module>study-rabbitmq</module>
         <module>study-quartz</module>
+        <module>study-sql</module>
     </modules>
 
     <properties>
