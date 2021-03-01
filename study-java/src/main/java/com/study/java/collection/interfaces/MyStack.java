@@ -1,4 +1,4 @@
-package com.study.interfaces;
+package com.study.java.collection.interfaces;
 
 /**
  * 栈接口

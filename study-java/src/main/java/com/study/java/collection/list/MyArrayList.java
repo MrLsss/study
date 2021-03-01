@@ -1,7 +1,7 @@
-package com.study.list;
+package com.study.java.collection.list;
 
 
-import com.study.interfaces.MyList;
+import com.study.java.collection.interfaces.MyList;
 
 import java.io.Serializable;
 import java.util.Arrays;

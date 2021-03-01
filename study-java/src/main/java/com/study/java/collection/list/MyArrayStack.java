@@ -1,6 +1,6 @@
-package com.study.list;
+package com.study.java.collection.list;
 
-import com.study.interfaces.MyStack;
+import com.study.java.collection.interfaces.MyStack;
 
 import java.util.EmptyStackException;
 
