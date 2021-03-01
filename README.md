@@ -1,5 +1,7 @@
 # 学习笔记
 
+- [Java基础](https://github.com/MrLsss/study/tree/main/study-java/src/main/java/com/study/java)
+
 - [算法](https://github.com/MrLsss/study/tree/main/study-algorithms/src/main/java/com/study)
 
 - [数据结构](https://github.com/MrLsss/study/tree/main/study-data-structures/src/main/java/com/study)
