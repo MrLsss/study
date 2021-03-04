@@ -12,13 +12,4 @@
     <name>study-rabbitmq-provider</name>
     <description>rabbitmq 生产者</description>
 
-    <dependencies>
-        <!--rabbitmq-->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-amqp</artifactId>
-        </dependency>
-    </dependencies>
-
-
 </project>

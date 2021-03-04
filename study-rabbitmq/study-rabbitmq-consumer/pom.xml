@@ -12,12 +12,4 @@
     <name>study-rabbitmq-consumer</name>
     <description>rabbitmq 消费者</description>
 
-    <dependencies>
-        <!--rabbitmq-->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-amqp</artifactId>
-        </dependency>
-    </dependencies>
-
 </project>
