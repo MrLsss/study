@@ -46,11 +46,20 @@ public class QuartzServiceImpl implements QuartzService {
                     .build();
             // 创建表达式调度构建器
             CronScheduleBuilder cronScheduleBuilder = CronScheduleBuilder.cronSchedule(job.getCronExpression());
+
             // 创建触发器
             CronTrigger cronTrigger = TriggerBuilder.newTrigger()
                     .withIdentity(job.getTriggerName(), job.getTriggerGroup())
                     .withDescription(job.getDescription())
                     .withSchedule(cronScheduleBuilder).build();
+//            CronTrigger cronTrigger = TriggerBuilder.newTrigger().withIdentity("trigger1", "triggerGroup1")
+//                    .usingJobData("trigger1", "这是jobDetail1的trigger")
+//                    .startNow()//立即生效
+//                    .startAt(startDate)
+//                    .endAt(endDate)
+//                    .withSchedule(CronScheduleBuilder.cronSchedule("* 30 10 ? * 1/5 2018"))
+//                    .build();
+
             scheduler.scheduleJob(jobDetail, cronTrigger);
             // 创建成功了并不马上执行
 //            scheduler.pauseJob(JobKey.jobKey(jobUnique, job.getJobGroup()));
