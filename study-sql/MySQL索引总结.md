@@ -39,7 +39,7 @@ MIPS：每秒处理的百万级的机器语言指令数。是衡量CPU速度的�
 - 每个非叶子节点由n个key和n+1个指针组成（m/2-1 <= n <= m-1）
 ### 结构图
 3叉的B-Tree结构图
-![image.png](https://my-study-notes.oss-cn-beijing.aliyuncs.com/sql/MySql%E7%B4%A2%E5%BC%95%E6%80%BB%E7%BB%93/MySQL%E7%B4%A2%E5%BC%95%E6%80%BB%E7%BB%93-1.png)
+![image.png](https://cdn.jsdelivr.net/gh/mrlsss/images@main/SQL/MySQL索引总结/MySQL索引总结-1.png)
 每个大方框是一个磁盘块，这是操作系统一次IO向内存读的数据，一个块对应四个扇区，p代表指针，指向下一个磁盘块的位置（p1代表小于17的磁盘块，p2代表在17和35之间的磁盘块，p3代表大于35的磁盘块），数字代表磁盘块中数据的key，data代表数据。
 
 ### 查找
@@ -62,7 +62,7 @@ MIPS：每秒处理的百万级的机器语言指令数。是衡量CPU速度的�
 
 ### 结构图
 假设每个节点只能存储4个键值和指针信息
-![image.png](https://my-study-notes.oss-cn-beijing.aliyuncs.com/sql/MySql%E7%B4%A2%E5%BC%95%E6%80%BB%E7%BB%93/MySQL%E7%B4%A2%E5%BC%95%E6%80%BB%E7%BB%93-2.png)
+![image.png](https://cdn.jsdelivr.net/gh/mrlsss/images@main/SQL/MySQL索引总结/MySQL索引总结-2.png)
 
 - 所有的叶子节点之间是一种链式环结构
   - 因此可以进行主键的范围查找和分页查找
@@ -100,14 +100,14 @@ Myisam存储引擎存储数据库数据，一共有三个文件：
 1. MYI文件：索引文件
 
 ### Myisam聚集索引
-![image.png](https://my-study-notes.oss-cn-beijing.aliyuncs.com/sql/MySql%E7%B4%A2%E5%BC%95%E6%80%BB%E7%BB%93/MySQL%E7%B4%A2%E5%BC%95%E6%80%BB%E7%BB%93-3.png)
+![image.png](https://cdn.jsdelivr.net/gh/mrlsss/images@main/SQL/MySQL索引总结/MySQL索引总结-3.png)
 如上所示，两个文件分别保存了数据和索引，由于在B+Tree中只有叶子节点有数据区，在Myisam中，数据区中保存的是数据的引用地址。
 比如查询id为101的数据。当查找到键为101的这个叶子节点时，可以读取到这条数据的物理磁盘地址：0x123456，就可以通过这个磁盘指针将数据数据加载出来。
 
 
 ### Myisam辅助索引
 如果不用ID作为索引，改用name作为索引
-![image.png](https://my-study-notes.oss-cn-beijing.aliyuncs.com/sql/MySql%E7%B4%A2%E5%BC%95%E6%80%BB%E7%BB%93/MySQL%E7%B4%A2%E5%BC%95%E6%80%BB%E7%BB%93-4.png)
+![image.png](https://cdn.jsdelivr.net/gh/mrlsss/images@main/SQL/MySQL索引总结/MySQL索引总结-4.png)
 和聚集索引一样，叶子节点也是保存的该记录的磁盘物理地址，**他们是平级的**
 
 ## InnoBD引擎
@@ -121,7 +121,7 @@ InnoDB存储引擎存储数据数据，一共有两个文件：
 ### InnoDB辅助索引
 在InnoDB中，因为设计之初就认为主键是非常重要的。是以主键为索引来组织数据的存储，当我们没有显式的建立主键索引的时候，搜索引擎会隐式的帮我们建立一个主键索引以组织数据存储。
 数据表行中数据的物理顺序与键值逻辑（索引）顺序相同，InnoDB就是以聚集索引来组织数据的存储的，在叶子节点上，保存了数据的所有信息。如果这个建立name字段的索引
-![image.png](https://my-study-notes.oss-cn-beijing.aliyuncs.com/sql/MySql%E7%B4%A2%E5%BC%95%E6%80%BB%E7%BB%93/MySQL%E7%B4%A2%E5%BC%95%E6%80%BB%E7%BB%93-5.png)
+![image.png](https://cdn.jsdelivr.net/gh/mrlsss/images@main/SQL/MySQL索引总结/MySQL索引总结-5.png)
 会产生一个辅助索引，name字段的索引，而此时辅助索引的叶子节点上保存的数据为聚集索引（ID索引）的关键字的值。基于辅助索引找到ID索引的值，再通过ID索引去获取最终的数据。
 
 
@@ -151,11 +151,11 @@ InnoDB存储引擎存储数据数据，一共有两个文件：
 
 - 建立索引的列离散性要高（ `count(distinct col):count(col)` ）：离散性越高越好。假设给性别列（男：1，女：0）建立索引，就会生成以下的索引树
 
-![image.png](https://my-study-notes.oss-cn-beijing.aliyuncs.com/sql/MySql%E7%B4%A2%E5%BC%95%E6%80%BB%E7%BB%93/MySQL%E7%B4%A2%E5%BC%95%E6%80%BB%E7%BB%93-6.png)
+![image.png](https://cdn.jsdelivr.net/gh/mrlsss/images@main/SQL/MySQL索引总结/MySQL索引总结-6.png)
 
 - 最左匹配原则：对索引中关键字进行计算（对比），是从左向右依次进行的，并且不可跳过
 
-![image.png](https://my-study-notes.oss-cn-beijing.aliyuncs.com/sql/MySql%E7%B4%A2%E5%BC%95%E6%80%BB%E7%BB%93/MySQL%E7%B4%A2%E5%BC%95%E6%80%BB%E7%BB%93-7.png)
+![image.png](https://cdn.jsdelivr.net/gh/mrlsss/images@main/SQL/MySQL索引总结/MySQL索引总结-7.png)
 如果id为字符串时，当进行匹配的时候，会把字符创转成ASCII码，abc会变成97、98、99，然后从左向右一个一个字符的对比。所以在sql查询中用 `like %a` 时索引会失效，是因为 `%` 标识全部匹配，既然已经全部匹配了，还要索引干啥，好不如全表扫描。
 
 - 最少空间原则：创建索引的关键字尽可能占用空间要小

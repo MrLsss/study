@@ -17,15 +17,15 @@
 
 1. 首先需要定义一个定时功能的接口，可以称之为Job（或Task），例如定时发送邮件的Job（Task），发送消息的Job（Task）等。接口实现如下：
 
-    ![](https://my-study-notes.oss-cn-beijing.aliyuncs.com/Quartz/Quartz%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1%E5%AD%A6%E4%B9%A0-1.png)
+    ![](https://cdn.jsdelivr.net/gh/mrlsss/images@main/Quartz/Quartz定时任务学习-1.png)
 
 2. 有了任务之后，还需要一个能够实现触发任务去执行的触发器，触发器Trigger最基本的功能是指定Job的执行时间、执行间隔、运行次数等。
 
-    ![](https://my-study-notes.oss-cn-beijing.aliyuncs.com/Quartz/Quartz%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1%E5%AD%A6%E4%B9%A0-2.png)
+    ![](https://cdn.jsdelivr.net/gh/mrlsss/images@main/Quartz/Quartz定时任务学习-2.png)
 
 3. 有了Job和Trigger后，怎么将两者结合起来呢？怎样指定Trigger去执行指定的Job呢？这时就需要一个Schedule，来负责这个功能的实现。
 
-    ![](https://my-study-notes.oss-cn-beijing.aliyuncs.com/Quartz/Quartz%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1%E5%AD%A6%E4%B9%A0-3.png)
+    ![](https://cdn.jsdelivr.net/gh/mrlsss/images@main/Quartz/Quartz定时任务学习-3.png)
 
 ### Quartz的实现
 
@@ -39,7 +39,7 @@
 
 如下图：
 
-![](https://my-study-notes.oss-cn-beijing.aliyuncs.com/Quartz/Quartz%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1%E5%AD%A6%E4%B9%A0-4.png)
+![](https://cdn.jsdelivr.net/gh/mrlsss/images@main/Quartz/Quartz定时任务学习-4.png)
 
 *Job 为作业的接口，为任务调度的对象；JobDetail 用来描述 Job 的实现类及其他相关的静态信息；Trigger 做为作业的定时管理工具，一个 Trigger 只能对应一个作业实例，而一个作业实例可对应多个触发器；Scheduler 做为定时任务容器，是 Quartz 最上层的东西，它提携了所有触发器和作业，使它们协调工作，每个 Scheduler 都存有 JobDetail 和 Trigger 的注册，一个 Scheduler 中可以注册多个 JobDetail 和多个 Trigger。*
 
@@ -280,7 +280,7 @@ public boolean addJob(JobEntity job) {
 
 启动项目：
 
-![](https://my-study-notes.oss-cn-beijing.aliyuncs.com/Quartz/Quartz%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1%E5%AD%A6%E4%B9%A0-5.jpg)
+![](https://cdn.jsdelivr.net/gh/mrlsss/images@main/Quartz/Quartz定时任务学习-5.png)
 
 如何动态调度定时任务，可以参考代码中的实现。
 

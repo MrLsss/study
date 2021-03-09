@@ -94,7 +94,8 @@ mysql> create table T(c int) engine=InnoDB;
 insert into T(c) values(1);
 ```
 下面按时间顺序执行两个事务的行为
-![image.png](https://my-study-notes.oss-cn-beijing.aliyuncs.com/sql/MySql%E4%BA%8B%E5%8A%A1%E6%80%BB%E7%BB%93/MySQL%E4%BA%8B%E5%8A%A1%E6%80%BB%E7%BB%93-1.png)
+![image.png](https://cdn.jsdelivr.net/gh/mrlsss/images@main/SQL/MySQL事务和锁总结/MySQL事务总结-1.png)
+
 在不同的隔离级别下，事务A会有哪些返回结果（V1、V2、V3）
 
 - 未提交读
@@ -115,7 +116,7 @@ insert into T(c) values(1);
 ## 事务隔离的实现
 在MySQL中，实际上每条记录在更新的时候都会同时记录一条回滚操作。记录上的最新值，通过回滚操作，都可以得到前一个状态的值。
 假设一个值从1被按顺序改成了2、3、4，在回滚日志里面就有类似下面的记录
-![image.png](https://my-study-notes.oss-cn-beijing.aliyuncs.com/sql/MySql%E4%BA%8B%E5%8A%A1%E6%80%BB%E7%BB%93/MySQL%E4%BA%8B%E5%8A%A1%E6%80%BB%E7%BB%93-2.png)
+![image.png](https://cdn.jsdelivr.net/gh/mrlsss/images@main/SQL/MySQL事务和锁总结/MySQL事务总结-2.png)
 当前值是4，但是在查询这条记录的时候，不同时刻启动的事务会有不同的read-view。在视图A、B、C里面，这一个记录的值分别是1、2、4，同一条记录在系统中可以存在多个版本，就是数据库的**多版本并发控制（MVCC）**，对于read-view C，要得到1，就必须将当前值依次执行图中所有的回滚操作得到。
 即使现在又另外一个事务正在将4改成5，这个事务跟read-view A、B、C对应的事务是不会冲突的。
 系统会判断，当没有事务再需要用到这些回滚日志的时候，回滚日志会被删除。什么时候才不需要了呢？就是当系统里没有比这个回滚日志更早的read-view的时候。
@@ -409,7 +410,7 @@ _个人理解：乐观锁认为读取的数据没有其他事务会来修改_
 通过MVCC，虽然每行记录都需要额外的存储空间，更多的行检查工作以及一些额外的维护工作，但可以减少锁的使用，大多数读操作都不用加锁，读数据操作很简单，性能很好，并且也能保证只会读取到符合标准的行，也只锁住必要行。
 
 我们不管从数据库方面的教课书中学到，还是从网络上看到，大都是上文中事务的四种隔离级别这一模块列出的意思，RR级别是可重复读的，但无法解决幻读，而只有在Serializable级别才能解决幻读。于是我就加了一个事务C来展示效果。在事务C中添加了一条teacher_id=1的数据commit，RR级别中应该会有幻读现象，事务A在查询teacher_id=1的数据时会读到事务C新加的数据。但是测试后发现，在MySQL中是不存在这种情况的，在事务C提交后，事务A还是不会读到这条数据。可见在MySQL的RR级别中，是解决了幻读的读问题的。参见下图
-![image.png](https://my-study-notes.oss-cn-beijing.aliyuncs.com/sql/MySql%E4%BA%8B%E5%8A%A1%E6%80%BB%E7%BB%93/MySQL%E4%BA%8B%E5%8A%A1%E6%80%BB%E7%BB%93-3.png)
+![image.png](https://cdn.jsdelivr.net/gh/mrlsss/images@main/SQL/MySQL事务和锁总结/MySQL事务总结-3.png)
 
 ### 快照读和当前读
 我们且看，在RR级别中，通过MVCC机制，虽然让数据变得可重复读，但我们读到的数据可能是历史数据，是不及时的数据，不是数据库当前的数据！这在一些对于数据的时效特别敏感的业务中，就很可能出问题。
@@ -452,7 +453,7 @@ RR级别：
 RR级别中，事务A在update后加锁，事务B无法插入新数据，这样事务A在update前后读的数据保持一致，避免了幻读。这个锁，就是Gap锁。
 MySQL是这么实现的：
 在class_teacher这张表中，teacher_id是个索引，那么它就会维护一套B+树的数据关系，为了简化，我们用链表结构来表达（实际上是个树形结构，但原理相同）
-![image.png](https://my-study-notes.oss-cn-beijing.aliyuncs.com/sql/MySql%E4%BA%8B%E5%8A%A1%E6%80%BB%E7%BB%93/MySQL%E4%BA%8B%E5%8A%A1%E6%80%BB%E7%BB%93-4.png)
+![image.png](https://cdn.jsdelivr.net/gh/mrlsss/images@main/SQL/MySQL事务和锁总结/MySQL事务总结-4.png)
 如图所示，InnoDB使用的是聚集索引，teacher_id身为二级索引，就要维护一个索引字段和主键id的树状结构（这里用链表形式表现），并保持顺序排列。
 Innodb将这段数据分成几个个区间
 

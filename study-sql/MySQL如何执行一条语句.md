@@ -7,7 +7,7 @@
 
 
 # MySQL基本架构
-![image.png](https://my-study-notes.oss-cn-beijing.aliyuncs.com/sql/MySql%E6%98%AF%E5%A6%82%E4%BD%95%E6%89%A7%E8%A1%8C%E4%B8%80%E6%9D%A1%E8%AF%AD%E5%8F%A5/MySQL%E5%A6%82%E4%BD%95%E6%89%A7%E8%A1%8C%E4%B8%80%E6%9D%A1%E8%AF%AD%E5%8F%A5-1.png)
+![image.png](https://cdn.jsdelivr.net/gh/mrlsss/images@main/SQL/MySQL是如何执行一条语句/MySQL如何执行一条语句-1.png)
 大体上来说，MySQL可以分为Server层和存储引擎层两部分
 
 ## Server层
@@ -34,7 +34,7 @@ Server层包括连接器、查询缓存、分析器、优化器、执行器等�
 这就意味着，一个用户成功建立连接后，即使你用管理员账号对这个用户的权限做了修改，也不会影响已经存在连接的权限。修改完后，只有再建立的连接才会使用新的权限设置。
 ### 空闲连接
 连接完成后，如果你没有后续的动作，这个连接就会处于空闲状态，可以输入 `show processlist` 命令查看到它。
-![image.png](https://my-study-notes.oss-cn-beijing.aliyuncs.com/sql/MySql%E6%98%AF%E5%A6%82%E4%BD%95%E6%89%A7%E8%A1%8C%E4%B8%80%E6%9D%A1%E8%AF%AD%E5%8F%A5/MySQL%E5%A6%82%E4%BD%95%E6%89%A7%E8%A1%8C%E4%B8%80%E6%9D%A1%E8%AF%AD%E5%8F%A5-2.png)
+![image.png](https://cdn.jsdelivr.net/gh/mrlsss/images@main/SQL/MySQL是如何执行一条语句/MySQL如何执行一条语句-2.png)
 上图就是 `show processlist` 的结果，其中Command列显示的“sleep”的这一行，表示系统中的空闲连接。
 客户端如果太长时间没有动静，连接器就会自动将它断开。这个时间是由参数 `wait_timeout` 控制的，默认是8小时。
 如果在连接被断开之后，客户端再次发起请求，就会收到 `Lost connection to MySQL server during query` 的错误提醒，这个时候如果要继续，就需要重连，然后再执行请求。
@@ -140,7 +140,7 @@ ERROR 1142 (42000): SELECT command denied to user 'b'@'localhost' for table 'T'
 关键点在于：先写日志，再写磁盘
 当有一条记录需要更新的时候，InnoDB引擎就会先把记录写到redo log里面，并更新内存，这个时候更新就算完成了。同时InnoDB引擎会在系统比较空闲的时候，将这个操作记录更新到磁盘里面去。
 InnoDB的redo log是固定大小的，比如可以配置为一组4个文件，每个文件的大小是1GB，那么这个redo log总共就可以记录4GB的操作。从头开始写，写到末尾就又回到开头循环写，如下：
-![image.png](https://my-study-notes.oss-cn-beijing.aliyuncs.com/sql/MySql%E6%98%AF%E5%A6%82%E4%BD%95%E6%89%A7%E8%A1%8C%E4%B8%80%E6%9D%A1%E8%AF%AD%E5%8F%A5/MySQL%E5%A6%82%E4%BD%95%E6%89%A7%E8%A1%8C%E4%B8%80%E6%9D%A1%E8%AF%AD%E5%8F%A5-3.png)
+![image.png](https://cdn.jsdelivr.net/gh/mrlsss/images@main/SQL/MySQL是如何执行一条语句/MySQL如何执行一条语句-3.png)
 write pos是当前记录的位置，一边写一边后移，写到3号文件末尾后就回到0号文件开头。
 check point是当前要擦除的位置，也是往后推移并且循环的，擦除记录前要把记录更新到数据文件。
 
@@ -167,7 +167,7 @@ MySQL从整体来看，一共有两层，一层是Server层，它主要做的是
 1. 执行器调用引擎的提交事务接口，引擎把刚刚写入的redo log 改成提交（commit）状态，更新完成。
 
 浅色：在InnoDB内部执行，深色：在执行器中执行
-![image.png](https://my-study-notes.oss-cn-beijing.aliyuncs.com/sql/MySql%E6%98%AF%E5%A6%82%E4%BD%95%E6%89%A7%E8%A1%8C%E4%B8%80%E6%9D%A1%E8%AF%AD%E5%8F%A5/MySQL%E5%A6%82%E4%BD%95%E6%89%A7%E8%A1%8C%E4%B8%80%E6%9D%A1%E8%AF%AD%E5%8F%A5-4.png)
+![image.png](https://cdn.jsdelivr.net/gh/mrlsss/images@main/SQL/MySQL是如何执行一条语句/MySQL如何执行一条语句-4.png)
 最后的redo log的写入拆为两个步骤：prepare和commit，这就是“两阶段提交”
 
 
