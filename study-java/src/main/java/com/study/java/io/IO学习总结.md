@@ -79,7 +79,7 @@ Java中字符是采用Unicode标准，Unicode编码中，一个英文为一个�
 
 ## 案例
 
-详见代码：IOTest
+详见代码：[IOTest](https://github.com/MrLsss/study/blob/main/study-java/src/main/java/com/study/java/io/IOTest.java)
 
 
 
