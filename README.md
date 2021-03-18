@@ -8,10 +8,11 @@
 
 - [leetcode](https://github.com/MrLsss/study/tree/main/study-leetcode/src/main/java/com/study)
 
-- [rabbitmq](https://github.com/MrLsss/study/tree/main/study-rabbitmq)
-
 - [数据库](https://github.com/MrLsss/study/tree/main/study-sql)
 
 - 框架
   - [Quartz](https://github.com/MrLsss/study/tree/main/study-quartz)
   - [Shiro](https://github.com/MrLsss/study/tree/main/study-shiro)
+
+- 消息队列
+  - [rabbitmq](https://github.com/MrLsss/study/tree/main/study-rabbitmq)
