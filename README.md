@@ -12,4 +12,6 @@
 
 - [数据库](https://github.com/MrLsss/study/tree/main/study-sql)
 
-- [Quartz](https://github.com/MrLsss/study/tree/main/study-quartz)
+- 框架
+  - [Quartz](https://github.com/MrLsss/study/tree/main/study-quartz)
+  - [Shiro](https://github.com/MrLsss/study/tree/main/study-shiro)
