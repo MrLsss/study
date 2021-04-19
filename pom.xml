@@ -25,6 +25,8 @@
         <module>study-quartz</module>
         <module>study-sql</module>
         <module>study-shiro</module>
+        <module>study-network</module>
+        <module>study-websocket</module>
     </modules>
 
     <properties>
