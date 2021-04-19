@@ -16,6 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * Copyright: Copyright (c) 2021
  *
  * <p> Description:
+ * <a href="https://blog.csdn.net/moshowgame/article/details/80275084">参考链接</a>
+ * 第三方websocket：GoEasy
  *
  * @author liushuai
  * @version 1.0.0
