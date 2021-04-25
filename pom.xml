@@ -27,6 +27,7 @@
         <module>study-shiro</module>
         <module>study-network</module>
         <module>study-websocket</module>
+        <module>study-docker</module>
     </modules>
 
     <properties>
