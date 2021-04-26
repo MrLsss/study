@@ -172,6 +172,98 @@ static <K,V> void moveRootToFront(Node<K,V>[] tab, TreeNode<K,V> root) {
 
 ## find
 
+```java
+/**
+  * 通过hash值和key找到对应的节点
+  * 从根节点p开始查找指定hash值和关键字key的结点
+  
+  * 此方法是红黑树节点的查找, 红黑树是特殊的自平衡二叉查找树
+  * 平衡二叉查找树的特点：左节点<根节点<右节点
+  */
+final TreeNode<K, V> find(int hash, Object key, Class<?> kc) {
+  // 将p节点赋值为调用此方法的节点，即红黑树的根节点
+  TreeNode<K, V> p = this;
+  do {
+    int ph; // 将存储p节点的hash值
+    int dir; //
+    K pk; // p节点的key值
+    TreeNode<K, V> pl = p.left; // p节点的左子节点
+    TreeNode<K, V> pr = p.right; // p节点的右子节点
+    TreeNode<K, V> q; //
+    // 左节点<根节点<右节点
+    // 如果p节点的hash值大于传入的hash值，那么就向左遍历
+    if ((ph = p.hash) > hash) {
+      p = pl;
+    }
+    // 如果p节点的hash值小于传入的hash值，那么就向右遍历
+    else if (ph < hash) {
+      p = pr;
+    }
+    // 如果两p节点的key和传入的key是同一个对象，或者p节点的key和传入的key相等且hash值相同，那么当前p节点就是要找的结点，直接返回p节点即可
+    else if ((pk = p.key) == key || (key != null && key.equals(pk))) {
+      return p;
+    }
+    // 如果左子节点为null，那么就向右遍历
+    else if (pl == null) {
+      p = pr;
+    }
+    // 如果右子节点为null，那么就向左遍历
+    else if (pr == null) {
+      p = pl;
+    }
+    // 将p节点和key进行比较
+    else if ((kc != null ||
+              (kc = comparableClassFor(key)) != null) && // kc不为空代表k实现了Comparable
+             (dir = compareComparables(kc, key, pk)) != 0) // key<pk则dir<0, key>pk则dir>0
+      p = (dir < 0) ? pl : pr; // key<pk则向左遍历(p赋值为p的左节点), 否则向右遍历
+    // 代码走到此处, 代表key所属类没有实现Comparable, 直接指定向p的右边遍历
+    else if ((q = pr.find(hash, key, kc)) != null) {
+      return q;
+    }
+    // 代码走到此处代表“pr.find(h, k, kc)”为空, 因此直接向左遍历
+    else {
+      p = pl;
+    }
+  } while (p != null);
+  return null;
+}
+```
+
+## comparableClassFor
+
+```java
+static Class<?> comparableClassFor(Object x) {
+  if (x instanceof Comparable) {
+    Class<?> c;
+    Type[] ts, as;
+    Type t;
+    ParameterizedType p;
+    if ((c = x.getClass()) == String.class) {
+      return c;
+    }
+    if ((ts = c.getGenericInterfaces()) != null) {
+      for (int i = 0; i < ts.length; ++i) {
+        if (((t = ts[i]) instanceof ParameterizedType) &&
+            ((p = (ParameterizedType) t).getRawType() == Comparable.class &&
+             (as = p.getActualTypeArguments()) != null &&
+             as.length == 1 && as[0] == c)) {
+          return c;
+        }
+      }
+    }
+  }
+  return null;
+}
+```
+
+## compareComparables
+
+```java
+static int compareComparables(Class<?> kc, Object k, Object x) {
+  return (x == null || x.getClass() != kc ? 0 : ((Comparable)k).compareTo(x));
+}
+```
+
 
 
 

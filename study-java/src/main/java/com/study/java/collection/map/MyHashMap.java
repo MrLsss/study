@@ -2,6 +2,8 @@
 //
 //import com.study.java.collection.interfaces.MyMap;
 //
+//import java.lang.reflect.ParameterizedType;
+//import java.lang.reflect.Type;
 //import java.util.*;
 //
 ///**
@@ -34,7 +36,7 @@
 //     * 默认的加载因子是0.75，默认初始容量是16，因此可以得出HashMap的默认容量是：0.75*16=12
 //     * 如果是0.5的话，每次达到容量的一半就要扩容，默认容量是16，达到8就扩容成32，达到16就扩容，到后来使用的空间和未使用的差额会越来越大，空间利用率不高。
 //     * 如果是1，那意味着每次空间使用完毕才扩容，在一定程度上会增加put时候的时间。
-//     *
+//     * <p>
 //     * 最好的loadfactor的值为log（2），约等于0.693，可能小于0.75 大于等于log（2）的factor都能提供更好的性能；
 //     * 再说capacity是2的幂，capacity * 0.75能够得到一个整数，例如16*0.75=12。
 //     */
@@ -135,6 +137,7 @@
 //
 //    /**
 //     * 红黑树节点
+//     *
 //     * @param <K>
 //     * @param <V>
 //     */
@@ -153,7 +156,7 @@
 //         * 返回包含此节点的树的根
 //         */
 //        final TreeNode<K, V> root() {
-//            for (TreeNode<K, V> r = this, p ;;) {
+//            for (TreeNode<K, V> r = this, p; ; ) {
 //                // 将当前节点赋值给r，并将r的父节点赋值给p，当p没有父节点时，表示此时p节点就是数的根
 //                if ((p = r.parent) == null) {
 //                    return r;
@@ -199,7 +202,7 @@
 //        }
 //
 //        /**
-//         * 从调用此方法的节点开始查找, 通过hash值和key找到对应的节点
+//         * 通过hash值和key找到对应的节点
 //         * 从根节点p开始查找指定hash值和关键字key的结点
 //         *
 //         * 此方法是红黑树节点的查找, 红黑树是特殊的自平衡二叉查找树
@@ -210,7 +213,7 @@
 //            TreeNode<K, V> p = this;
 //            do {
 //                int ph; // 将存储p节点的hash值
-//                int dir; //
+//                int dir;
 //                K pk; // p节点的key值
 //                TreeNode<K, V> pl = p.left; // p节点的左子节点
 //                TreeNode<K, V> pr = p.right; // p节点的右子节点
@@ -228,34 +231,104 @@
 //                else if ((pk = p.key) == key || (key != null && key.equals(pk))) {
 //                    return p;
 //                }
+//                // 如果左子节点为null，那么就向右遍历
 //                else if (pl == null) {
 //                    p = pr;
 //                }
+//                // 如果右子节点为null，那么就向左遍历
 //                else if (pr == null) {
 //                    p = pl;
 //                }
+//                // 将p节点和key进行比较
 //                else if ((kc != null ||
-//                        (kc = comparableClassFor(k)) != null) &&
-//                        (dir = compareComparables(kc, k, pk)) != 0)
-//                    p = (dir < 0) ? pl : pr;
+//                        (kc = comparableClassFor(key)) != null) && // kc不为空代表k实现了Comparable
+//                        (dir = compareComparables(kc, key, pk)) != 0) // key<pk则dir<0, key>pk则dir>0
+//                    p = (dir < 0) ? pl : pr; // key<pk则向左遍历(p赋值为p的左节点), 否则向右遍历
+//                // 代码走到此处, 代表key所属类没有实现Comparable, 直接指定向p的右边遍历
 //                else if ((q = pr.find(hash, key, kc)) != null) {
 //                    return q;
 //                }
+//                // 代码走到此处代表“pr.find(h, k, kc)”为空, 因此直接向左遍历
 //                else {
 //                    p = pl;
 //                }
-//            } while(p != null);
+//            } while (p != null);
 //            return null;
 //        }
 //
+//        /**
+//         * 获取树的根节点
+//         * @param h hash值
+//         * @param k key
+//         */
+//        final TreeNode<K, V> getTreeNode(int h, Object k) {
+//            // 1.首先找到红黑树的根节点
+//            // 2.使用根节点调用find方法
+//            return ((parent != null) ? root() : this).find(h, k, null);
+//        }
+//
+//        /**
+//         * 用于不可比较或者hashCode相同时进行比较的方法
+//         * 只是一个一致的插入规则，用来维护重定位的等价性。
+//         */
+//        static int tieBreakOrder(Object a, Object b) {
+//            int d;
+//            if (a == null || b == null || (d = a.getClass().getName().compareTo(b.getClass().getName())) == 0) {
+//                d = (System.identityHashCode(a) <= System.identityHashCode(b) ? -1 : 1);
+//            }
+//            return d;
+//        }
+//
+//        /**
+//         * 构建红黑树
+//         */
+//        final void treeify(MyHashMap.Node<K,V>[] tab) {
+//
+//        }
+//
+//        static Class<?> comparableClassFor(Object x) {
+//            // 判断x是否实现了Comparable接口
+//            if (x instanceof Comparable) {
+//                Class<?> c;
+//                Type[] ts, as;
+//                Type t;
+//                ParameterizedType p;
+//                // 校验x是否为String类型
+//                if ((c = x.getClass()) == String.class) {
+//                    return c;
+//                }
+//                if ((ts = c.getGenericInterfaces()) != null) {
+//                    // 遍历x实现的所有接口
+//                    for (int i = 0; i < ts.length; ++i) {
+//                        // 如果x实现了Comparable接口，则返回x的Class
+//                        if (((t = ts[i]) instanceof ParameterizedType) &&
+//                                ((p = (ParameterizedType) t).getRawType() == Comparable.class &&
+//                                        (as = p.getActualTypeArguments()) != null &&
+//                                        as.length == 1 && as[0] == c)) {
+//                            return c;
+//                        }
+//                    }
+//                }
+//            }
+//            return null;
+//        }
+//
+//        /**
+//         * 如果x所属的类是kc，返回k.compareTo(x)的比较结果
+//         * 如果x为空，或者其所属的类不是kc，返回0
+//         */
+//        static int compareComparables(Class<?> kc, Object k, Object x) {
+//            return (x == null || x.getClass() != kc ? 0 : ((Comparable)k).compareTo(x));
+//        }
 //    }
 //
 //    // 构造方法
 //
 //    /**
 //     * 构造一个指定初始容量和负载因子的空hashmap
+//     *
 //     * @param initCapacity 容量
-//     * @param loadFactor 装载因子
+//     * @param loadFactor   装载因子
 //     */
 //    public MyHashMap(int initCapacity, float loadFactor) {
 //        if (initCapacity < 0) {
@@ -275,6 +348,7 @@
 //
 //    /**
 //     * 构造一个空的hashmap，具有指定的初始容量和默认的负载因子（0.75）
+//     *
 //     * @param initCapacity 初始容量
 //     */
 //    public MyHashMap(int initCapacity) {
@@ -345,8 +419,9 @@
 //
 //    /**
 //     * 用于Map.get方法
+//     *
 //     * @param hash key的hash值
-//     * @param key 键值
+//     * @param key  键值
 //     * @return 节点，如果为空返回null
 //     */
 //    private final Node<K, V> getNode(int hash, Object key) {
@@ -364,6 +439,7 @@
 //     * 计算key的hash值
 //     * 将 hashCode 的高 16 位与 hashCode 进行异或运算，
 //     * 主要是为了在 table 的 length 较小的时候，让高位也参与运算，并且不会有太大的开销。
+//     *
 //     * @param key key
 //     */
 //    private static int hash(Object key) {
@@ -373,6 +449,7 @@
 //
 //    /**
 //     * 找到大于等于initialCapacity的最小的2的幂（initialCapacity如果就是2的幂，则返回的还是这个数）
+//     *
 //     * @param cap 指定的容量
 //     * @return 大于等于initialCapacity的最小的2的幂
 //     */
@@ -391,7 +468,6 @@
 //        n |= n >>> 16;
 //        return (n < 0) ? 1 : (n >= MAX_CAPACITY) ? MAX_CAPACITY : n + 1;
 //    }
-//
 //
 //
 //}

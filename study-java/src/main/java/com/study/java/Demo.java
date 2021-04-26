@@ -10,5 +10,8 @@ package com.study.java;
  * @createTime 2021年04月23日 15:18
  */
 public class Demo {
+    public static void main(String[] args) {
 
+
+    }
 }
