@@ -1420,7 +1420,9 @@ hello
 
 ```shell
 $ docker run -d -p 3306:3306 -v /home/mysql/conf:/etc/mysql/conf.d -v /home/mysql/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=123456 --name mysql01 mysql:5.7
+
 $ docker run -d -p 3310:3306 -e MYSQL_ROOT_PASSWORD=123456 --name mysql02 --volumes-from mysql01  mysql:5.7
+
 # 这个时候，可以实现两个容器数据同步！
 ```
 
@@ -1432,7 +1434,1053 @@ $ docker run -d -p 3310:3306 -e MYSQL_ROOT_PASSWORD=123456 --name mysql02 --volu
 
 # DockerFile
 
+> Dockerfile 是一个用来构建镜像的文本文件
 
+Dockerfile是一个包含用于组合映像的命令的文本文档。可以使用在命令行中调用任何命令。 Docker通过读取`Dockerfile`中的指令自动生成映像。
+
+`docker build`命令用于从Dockerfile构建映像。可以在`docker build`命令中使用`-f`标志指向文件系统中任何位置的Dockerfile。
+
+例如：`docker build -f /path/to/a/Dockerfile`
+
+## Dockerfile的基本结构
+
+Dockerfile 一般分为四部分：基础镜像信息、维护者信息、镜像操作指令和容器启动时执行指令。
+
+## 构建步骤
+
+1. 编写一个Dockerfile文件
+2. docker build构建成为一个镜像
+3. docker run运行镜像
+4. docker push 发布镜像（DockerHub、阿里云仓库）
+
+**注意：**
+
+- 每个保留关键字(指令）都是必须是大写字母
+- 执行从上到下顺序
+- #表示注释
+- 每一个指令都会创建提交一个新的镜像曾，并提交！
+
+![](https://cdn.jsdelivr.net/gh/mrlsss/images//Docker/aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2NoZW5nY29kZXgvY2xvdWRpbWcvbWFzdGVyL2ltZy9pbWFnZS0yMDIwMDUxNjEzMTc1Njk5Ny5wbmc.png)
+
+## Dockerfile指令
+
+```shell
+FROM                	# from:基础镜像，一切从这里开始构建
+MAINTAINER            # maintainer:镜像是谁写的， 姓名+邮箱
+RUN                   # run:镜像构建的时候需要运行的命令
+ADD                   # add:步骤，tomcat镜像，这个tomcat压缩包！添加内容 添加同目录
+WORKDIR               # workdir:镜像的工作目录
+VOLUME                # volume:挂载的目录
+EXPOSE                # expose:保留端口配置
+CMD                   # cmd:指定这个容器启动的时候要运行的命令，只有最后一个会生效，可被替代
+ENTRYPOINT            # entrypoint:指定这个容器启动的时候要运行的命令，可以追加命令
+ONBUILD               # onbuild:当构建一个被继承DockerFile这个时候就会运行onbuild的指令，触发指令
+COPY                	# copy:类似ADD，将我们文件拷贝到镜像中
+ENV                   # env:构建的时候设置环境变量！
+```
+
+![](https://cdn.jsdelivr.net/gh/mrlsss/images//Docker/20200524154609624.png)
+
+### FROM
+
+> 指定基础镜像，必须为第一个命令
+
+```shell
+格式：
+FROM <image>
+FROM <image>:<tag>
+FROM <image>@<digest>
+
+示例：
+FROM mysql:5.6
+
+注：
+tag或digest是可选的，如果不使用这两个值时，会使用latest版本的基础镜像
+```
+
+### MAINTAINER
+
+> 维护者信息
+
+```shell
+格式：
+MAINTAINER <name>
+
+示例：
+MAINTAINER ZhangSan
+MAINTAINER ZhangSan<ZhangSan@163.com>
+```
+
+### RUN
+
+> 构建镜像时执行的命令
+
+```shell
+# RUN 用于在镜像容器中执行命令，其有以下两种命令执行方式。
+
+# shell执行
+格式：
+RUN <command>
+
+示例：
+RUN apk update
+
+# exec执行
+格式：
+RUN ["executable", "param1", "param2"]
+
+示例：
+RUN ["/etc/execfile", "arg1", "arg2"]
+
+注：
+RUN指令创建的中间镜像会被缓存，并会在下次构建中使用。如果不想使用这些缓存镜像，可以在构建时指定--no-cache参数，如：docker build --no-cache
+```
+
+### ADD
+
+> 将本地文件添加到容器中，tar类型文件会自动解压（网络压缩资源不会被解压），可以访问网络资源，类似wget。
+
+```shell
+格式：
+ADD <src>...<dest>
+ADD ["<src>",... "dest"] # 用于包含空格的路径
+
+示例：
+ADD hom* /mydir/				# 添加所有以“hom”开头的文件
+ADD home?.txt /mydir/		# ？替代一个单字符，例如：“home.txt”
+ADD test relativeDir/		# 添加“test”到 `WORKDIR`/relativeDir/
+ADD test /absoluteDir/	# 添加“test”到/absoluteDir/
+```
+
+### COPY
+
+> 功能类似ADD，但是不会自动解压文件，也不能访问网络资源。
+
+```shell
+格式：
+COPY [--chown=<user>:<group>] <源路径1>...  <目标路径>
+COPY [--chown=<user>:<group>] ["<源路径1>",...  "<目标路径>"]
+
+[--chown=<user>:<group>]：可选参数，用户改变复制到容器内文件的拥有者和属组。
+<源路径>：源文件或者源目录，这里可以是通配符表达式，其通配符规则要满足 Go 的 filepath.Match 规则
+<目标路径>：容器内的指定路径，该路径不用事先建好，路径不存在的话，会自动创建。
+
+示例：
+COPY hom* /mydir/
+COPY hom?.txt /mydir/
+```
+
+### CMD
+
+> 构建容器后调用，也就是在容器启动时才进行调用。
+
+```shell
+格式：
+CMD ["executable", "param1", "param2"]	# 执行可执行文件(推荐)
+CMD ["param1", "param2"]								# 该写法是为 ENTRYPOINT 指令指定的程序提供默认参数
+CMD command param1 param2								# 在运行的过程中，会自动转换成第一种格式运行
+
+示例：
+CMD echo "this is a test." | wc -
+CMD ["/usr/bin/wc", "--help"]
+
+注：
+CMD不同于RUN，CMD用于指定在容器启动时所要执行的命令(docker run)，而RUN用于指定镜像构建时所要执行的命令(docker build)。
+如果 Dockerfile 中如果存在多个 CMD 指令，仅最后一个生效。
+```
+
+### ENTRYPOINT
+
+> 配置容器，使其可执行化。配合CMD可只使用参数。
+>
+> 类似于 CMD 指令，但其不会被 docker run 的命令行参数指定的指令所覆盖，而且这些命令行参数会被当作参数送给 ENTRYPOINT 指令指定的程序。
+
+如果运行 docker run 时使用了 --entrypoint 选项，将覆盖 CMD 指令指定的程序。
+
+```shell
+格式：
+ENTRYPOINT ["<executeable>","<param1>","<param2>",...]
+ENTRYPOINT command param1 param2 (shell内部命令)
+
+示例：
+FROM nginx
+
+ENTRYPOINT ["nginx", "-c"] # 定参
+CMD ["/etc/nginx/nginx.conf"] # 变参 
+
+注：
+ENTRYPOINT与CMD非常类似，不同的是通过docker run执行的命令不会覆盖ENTRYPOINT，而docker run命令中指定的任何参数，都会被当做参数再次传递给ENTRYPOINT。
+Dockerfile中只允许有一个ENTRYPOINT命令，多指定时会覆盖前面的设置，而只执行最后的ENTRYPOINT指令。
+```
+
+```shell
+# 1.不传参运行
+docker run nginx:test
+# 容器内会默认运行以下命令，启动主进程。
+nginx -c /etc/nginx/nginx.conf
+
+# 2.传参运行
+docker run nginx:test -c /etc/nginx/new.conf
+# 容器内会默认运行以下命令，启动主进程(/etc/nginx/new.conf:假设容器内已有此文件)
+nginx -c /etc/nginx/new.conf
+```
+
+### LABEL
+
+> 用于为镜像添加元数据
+
+```shell
+格式：
+LABEL <key>=<value> <key>=<value> ...
+
+示例：
+LABEL version="1.0" description="测试描述" by="作者"
+
+注：
+使用LABEL指定元数据时，一条LABEL可以指定一个或多个元数据，指定多条元数据时，不同元数据之间通过空格分隔。
+推荐将所有的元数据通过一条LABEL指令指定，一面生成过多的中间镜像。
+```
+
+### ENV
+
+> 设置环境变量，定义了环境变量，那么在后续的指令中，就可以使用这个环境变量。
+
+```shell
+格式：
+ENV <key> <value>	#<key>之后的所有内容均会被视为其<value>的组成部分，因此，一次只能设置一个变量
+ENV <key1>=<value1> <key2>=<value2> ... #可以设置多个变量，每个变量为一个"<key>=<value>"的键值对，如果<key>中包含空格，可以使用\来进行转义，也可以通过""来进行标示；另外，反斜线也可以用于续行
+
+示例：
+ENV MYPATH /usr/local # 配置环境变量的目录
+
+示例：设置 NODE_VERSION = 7.2.0 ， 在后续的指令中可以通过 $NODE_VERSION 引用：
+ENV NODE_VERSION 7.2.0
+
+RUN curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.xz" \
+  && curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/SHASUMS256.txt.asc"
+```
+
+### EXPOSE
+
+> 指定与外界交互的端口
+
+```shell
+格式：
+EXPOSE <port> [<port>...]
+
+示例：
+EXPOSE 80 443
+EXPOSE 8080
+EXPOSE 11211/tcp 11211/udp
+
+注：
+EXPOSE并不会让容器的端口访问到主机，要使其可访问，需要在docker run运行容器时通过-p来发布这些端口，或通过-P参数来发布EXPOSE导出的所有端口。
+```
+
+### VOLUME
+
+> 定义匿名数据卷。在启动容器时忘记挂载数据卷，会自动挂载到匿名卷。
+
+- 避免重要的数据，因容器重启而丢失，这是非常致命的。
+- 避免容器不断变大。
+
+```shell
+格式：
+VOLUME ["<路径1>", "<路径2>"...]
+VOLUME <路径>
+
+示例：
+VOLUME ["/data"]
+VOLUME ["/var/www", "/var/log/apache2", "/etc/apache2"
+
+注：
+在启动容器 docker run 的时候，我们可以通过 -v 参数修改挂载点。
+一个卷可以存在于一个或多个容器的指定目录，该目录可以绕过联合文件系统，并具有以下功能：
+1.卷可以容器间共享和重用
+2.容器并不一定要和其它容器共享卷
+3.修改卷后会立即生效
+4.对卷的修改不会对镜像产生影响
+5.卷会一直存在，直到没有任何容器在使用它
+```
+
+### WORKDIR
+
+> 指定工作目录。用 WORKDIR 指定的工作目录，会在构建镜像的每一层中都存在。（WORKDIR 指定的工作目录，必须是提前创建好的）。
+>
+> docker build 构建镜像过程中的，每一个 RUN 命令都是新建的一层。只有通过 WORKDIR 创建的目录才会一直存在。
+
+```shell
+格式：
+WORKDIR <工作目录路径>
+
+示例：
+WORKDIR /a		# 这时工作目录为：/a
+WORKDIR b			# 这时工作目录为：/a/b
+WORKDIR c			# 这时工作目录为：/a/b/c
+
+注：
+通过WORKDIR设置工作目录后，Dockerfile中其后的命令RUN、CMD、ENTRYPOINT、ADD、COPY等命令都会在该目录下执行。在使用docker run运行容器时，可以通过-w参数覆盖构建时所设置的工作目录。
+```
+
+### USER
+
+> 用于指定执行后续命令的用户和用户组，这边只是切换后续命令执行的用户（用户和用户组必须提前已经存在）。
+
+```shell
+格式：
+USER <用户名>[:<用户组>]
+
+示例：
+USER www
+
+注：
+使用USER指定用户后，Dockerfile中其后的命令RUN、CMD、ENTRYPOINT都将使用该用户。镜像构建完成后，通过docker run运行容器时，可以通过-u参数来覆盖所指定的用户。
+```
+
+### ARG
+
+> 构建参数，与 ENV 作用一至。不过作用域不一样。ARG 设置的环境变量仅对 Dockerfile 内有效，也就是说只有 docker build 的过程中有效，构建好的镜像内不存在此环境变量。
+
+```shell
+格式：
+ARG <name>[=<default vlaue>]
+
+示例：
+ARG site
+ARG build_user=www
+
+注：
+构建命令 docker build 中可以用 --build-arg <参数名>=<值> 来覆盖。
+```
+
+### ONBUILD
+
+> 用于设置镜像触发器
+
+```shell
+格式：
+ONBUILD [INSTRUCTION]
+
+示例：
+ONBUILD ADD . /app/src
+ONBUILD RUN /usr/local/bin/python-build --dir /app/src
+
+注：
+当所构建的镜像被用做其它镜像的基础镜像，该镜像中的触发器将会被钥触发
+```
+
+## 创建一个自定义的centos
+
+```shell
+# 编写Dockerfile
+vim Dockerfile
+
+FROM centos # 指定基础镜像
+MAINTAINER xxx<xxx@163.com> # 作者信息
+
+ENV MYPATH /usr/local # 定义环境变量
+WORKDIR $MYPATH # 指定工作目录，用$的方式取ENV
+
+# 构建容器时，所需要执行的命令
+RUN yum install -y vim 
+RUN yum install -y net-tools
+
+EXPOSE 80 # 暴露的端口
+
+# 容器启动时 docker run，需要执行的命令
+CMD echo $MYPATH
+CMD echo "-----end-----"
+CMD /bin/bash
+
+# 测试
+[root@localhost centos]# docker build -t mycentos:1.0 . # 最后的 . 代表本次执行的上下文路径
+# 如果文件名不是Dockerfile，可以通过-f来指定
+[root@localhost centos]# docker build -t -f mydockerfile mycentos:1.0 . # mydockerfile在当前路径
+...
+Successfully built 416e8baf3232
+Successfully tagged mycentos:1.0
+[root@localhost centos]# docker images
+REPOSITORY   TAG       IMAGE ID       CREATED         SIZE
+mycentos     1.0       416e8baf3232   9 seconds ago   291MB
+centos       latest    300e315adb2f   4 months ago    209MB
+[root@localhost centos]# docker run -it mycentos:1.0
+[root@ca6ce3f28716 local]# pwd # 进入容器，直接就到了工作路径 /usr/local
+/usr/local
+[root@ca6ce3f28716 local]# ifconfig # ifconfig命令可用
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 172.17.0.2  netmask 255.255.0.0  broadcast 172.17.255.255
+        ether 02:42:ac:11:00:02  txqueuelen 0  (Ethernet)
+        RX packets 6  bytes 516 (516.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+# 变更历史
+[root@localhost centos]# docker history 416e8baf3232
+IMAGE          CREATED         CREATED BY                                      SIZE      COMMENT
+416e8baf3232   7 minutes ago   /bin/sh -c #(nop)  CMD ["/bin/sh" "-c" "/bin…   0B        
+5d04af994bf0   7 minutes ago   /bin/sh -c #(nop)  CMD ["/bin/sh" "-c" "echo…   0B        
+533ffc5c6547   7 minutes ago   /bin/sh -c #(nop)  CMD ["/bin/sh" "-c" "echo…   0B        
+341c7fdb2b0f   7 minutes ago   /bin/sh -c #(nop)  EXPOSE 80                    0B        
+73213213bd76   7 minutes ago   /bin/sh -c yum install -y net-tools             23.3MB    
+5113342e320b   7 minutes ago   /bin/sh -c yum install -y vim                   58MB      
+ba6dfd9d5835   7 minutes ago   /bin/sh -c #(nop) WORKDIR /usr/local            0B        
+2afc1ab02156   7 minutes ago   /bin/sh -c #(nop)  ENV MYPATH=/usr/local        0B        
+825dcad5be17   7 minutes ago   /bin/sh -c #(nop)  MAINTAINER liu<lius420@16…   0B        
+300e315adb2f   4 months ago    /bin/sh -c #(nop)  CMD ["/bin/bash"]            0B        
+<missing>      4 months ago    /bin/sh -c #(nop)  LABEL org.label-schema.sc…   0B        
+<missing>      4 months ago    /bin/sh -c #(nop) ADD file:bd7a2aed6ede423b7…   209MB
+```
+
+## 测试CMD
+
+```shell
+# 编写Dockerfile
+[root@localhost centos]# cat Dockerfile 
+FROM centos
+MAINTAINER xxx<xxx@163.com>
+
+CMD ["ls", "-a"] # 容器启动后将执行 ls -a
+
+# 构建
+[root@localhost centos]# docker build -t mycentos:1.0 .
+Sending build context to Docker daemon  2.048kB
+Step 1/3 : FROM centos
+ ---> 300e315adb2f
+Step 2/3 : MAINTAINER liu<lius420@163.com>
+ ---> Running in dcc229df5f2f
+Removing intermediate container dcc229df5f2f
+ ---> 726b95b44367
+Step 3/3 : CMD ["ls", "-a"]
+ ---> Running in da3a819a04c9
+Removing intermediate container da3a819a04c9
+ ---> ed9e42faee3f
+Successfully built ed9e42faee3f
+Successfully tagged mycentos:1.0
+
+# 运行
+[root@localhost centos]# docker run mycentos:1.0
+.
+..
+.dockerenv
+bin
+dev
+etc
+home
+lib
+lib64
+lost+found
+media
+mnt
+opt
+proc
+root
+run
+sbin
+srv
+sys
+tmp
+usr
+var
+# 可以看到，运行之后就执行了 ls -a命令
+
+# 如果想追加一个命令  -l 成为ls -al：展示列表详细数据
+[root@localhost centos]# docker run mycentos:1.0 -l
+docker: Error response from daemon: OCI runtime create failed: container_linux.go:367: starting container process caused: exec: "-l": executable file not found in $PATH: unknown.
+ERRO[0000] error waiting for container: context canceled
+# cmd的情况下 -l 替换了CMD["ls","-l"] 而 -l  不是命令所以报错
+```
+
+## 测试ENTRYPOINT
+
+```shell
+# 编写Dockerfile
+[root@localhost centos]# cat Dockerfile 
+FROM centos
+MAINTAINER liu<lius420@163.com>
+
+ENTRYPOINT ["ls", "-a"]
+
+# 构建镜像
+[root@localhost centos]# docker build -t mycentos:1.0 .
+
+# 运行镜像
+[root@localhost centos]# docker run mycentos:1.0
+.
+..
+.dockerenv
+bin
+dev
+etc
+home
+lib
+lib64
+lost+found
+media
+mnt
+opt
+proc
+root
+run
+sbin
+srv
+sys
+tmp
+usr
+var
+# 我们的命令，是直接拼接在我们得ENTRYPOINT命令后面的
+[root@localhost centos]# docker run mycentos:1.0 -l
+total 0
+drwxr-xr-x.   1 root root   6 Apr 27 07:17 .
+drwxr-xr-x.   1 root root   6 Apr 27 07:17 ..
+-rwxr-xr-x.   1 root root   0 Apr 27 07:17 .dockerenv
+lrwxrwxrwx.   1 root root   7 Nov  3 15:22 bin -> usr/bin
+drwxr-xr-x.   5 root root 340 Apr 27 07:17 dev
+drwxr-xr-x.   1 root root  66 Apr 27 07:17 etc
+drwxr-xr-x.   2 root root   6 Nov  3 15:22 home
+lrwxrwxrwx.   1 root root   7 Nov  3 15:22 lib -> usr/lib
+lrwxrwxrwx.   1 root root   9 Nov  3 15:22 lib64 -> usr/lib64
+drwx------.   2 root root   6 Dec  4 17:37 lost+found
+drwxr-xr-x.   2 root root   6 Nov  3 15:22 media
+drwxr-xr-x.   2 root root   6 Nov  3 15:22 mnt
+drwxr-xr-x.   2 root root   6 Nov  3 15:22 opt
+dr-xr-xr-x. 121 root root   0 Apr 27 07:17 proc
+dr-xr-x---.   2 root root 162 Dec  4 17:37 root
+drwxr-xr-x.  11 root root 163 Dec  4 17:37 run
+lrwxrwxrwx.   1 root root   8 Nov  3 15:22 sbin -> usr/sbin
+drwxr-xr-x.   2 root root   6 Nov  3 15:22 srv
+dr-xr-xr-x.  13 root root   0 Apr 27 06:52 sys
+drwxrwxrwt.   7 root root 145 Dec  4 17:37 tmp
+drwxr-xr-x.  12 root root 144 Dec  4 17:37 usr
+drwxr-xr-x.  20 root root 262 Dec  4 17:37 var
+```
+
+## 编写Tomcat镜像
+
+首先准备好tomcat和jdk到当前目录
+
+```shell
+[root@localhost tomcat]# cat Dockerfile 
+FROM centos			# 基础镜像centos
+MAINTAINER xxx<xxx@163.com> # 作者
+
+COPY README /usr/local/README # 负责README文件
+ADD jdk-8u191-linux-x64.tar.gz /usr/local # 添加jdk，ADD命令会自动解压
+ADD apache-tomcat-9.0.45.tar.gz /usr/local # 添加tomcat
+
+RUN yum install -y vim # 安装vim
+ENV MYPATH /usr/local # 环境变量设置工作目录
+WORKDIR $MYPATH # 设置工作目录
+
+ENV JAVA_HOME /usr/local/jdk1.8.0_191 # 环境变量：JAVA_HOME
+ENV CLASSPATH $JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar 
+
+ENV CATALINA_HOME /usr/local/apache-tomcat-9.0.45 # 环境变量：tomcat
+ENV CATALINA_BASH /usr/local/apache-tomcat-9.0.45
+
+# 设置PATH环境变量 : 是分隔符
+ENV PATH $PATH:$JAVA_HOME/bin:$CATALINA_HOME/lib:$CATALINA_HOME/bin 
+
+EXPOSE 8080 # 设置暴露的端口
+
+CMD /usr/local/apache-tomcat-9.0.45/bin/startup.sh && tail -F /usr/local/apache-tomcat-9.0.45/logs/catalina.out # 设置启动后执行的命令
+
+# 构建
+[root@localhost tomcat]# docker build -t mytomcat:1.0 .
+
+# 运行镜像
+[root@localhost tomcat]# docker run -p 8080:8080 -d -v /home/tomcat/test:/usr/local/apache-tomcat-9.0.45/webapps/test -v /home/tomcat/tomcatlogs:/usr/local/apache-tomcat-9.0.45/logs  --name tomcat01 mytomcat:1.0
+25a6840964ba3c78f37fcbeb1f6156ef12e0b62655b128f845f39ad36392bcb0
+
+# 测试
+[root@localhost tomcat]# docker exec -it 25a6840964ba3c78f37fcbeb1f6156ef12e0b62655b128f845f39ad36392bcb0 /bin/bash
+[root@25a6840964ba local]# curl http://localhost:8080
+```
+
+## 发布镜像
+
+1. 发布到DockerHub 
+
+   `docker push 容器名`
+
+2. 发布到云服务器
+
+   官网有教程
 
 # Docker网络
+
+```shell
+[root@localhost tomcat]# ip addr
+# 本级回环地址
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+# 内网地址
+2: enp0s3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 08:00:27:0a:25:1f brd ff:ff:ff:ff:ff:ff
+    inet 192.168.31.37/24 brd 192.168.31.255 scope global noprefixroute dynamic enp0s3
+       valid_lft 40178sec preferred_lft 40178sec
+    inet6 fe80::ebe7:c288:c484:a011/64 scope link noprefixroute 
+       valid_lft forever preferred_lft forever
+# docker0地址
+3: docker0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default 
+    link/ether 02:42:88:9a:e4:bb brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::42:88ff:fe9a:e4bb/64 scope link 
+       valid_lft forever preferred_lft forever
+```
+
+这里有三个网络
+
+## docker是如何处理容器网络访问的？
+
+```shell
+# 测试，运行一个tomcat
+[root@localhost tomcat]# docker run -d -P --name tomcat01 tomcat:9.0.45
+5cb8a312e628d954554aadeb3dad880791ae2521fa7aa7bedd10428be83a56a6
+[root@localhost tomcat]# docker exec -it 5cb8a312e628d954554aadeb3dad880791ae2521fa7aa7bedd10428be83a56a6 ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+24: eth0@if25: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.17.0.2/16 brd 172.17.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+
+# linux可以ping通容器内部
+[root@localhost tomcat]# ping 172.17.0.2
+PING 172.17.0.2 (172.17.0.2) 56(84) bytes of data.
+64 bytes from 172.17.0.2: icmp_seq=1 ttl=64 time=0.044 ms
+64 bytes from 172.17.0.2: icmp_seq=2 ttl=64 time=0.031 ms
+64 bytes from 172.17.0.2: icmp_seq=3 ttl=64 time=0.032 ms
+
+# 容器内部也可以ping通linux
+[root@localhost tomcat]# docker exec -it 5cb8a312e628d954554aadeb3dad880791ae2521fa7aa7bedd10428be83a56a6 /bin/bash
+root@5cb8a312e628:/usr/local/tomcat# ping 192.168.31.37
+PING 192.168.31.37 (192.168.31.37) 56(84) bytes of data.
+64 bytes from 192.168.31.37: icmp_seq=1 ttl=64 time=0.089 ms
+64 bytes from 192.168.31.37: icmp_seq=2 ttl=64 time=0.038 ms
+64 bytes from 192.168.31.37: icmp_seq=3 ttl=64 time=0.032 ms
+```
+
+**原理**
+
+我们每启动一个docker容器，docker就会给docker容器分配一个ip，我们只要安装了docker，就会有一个docker0桥接模式，使用的技术是**veth-pair**技术。
+
+https://www.cnblogs.com/bakari/p/10613710.html
+
+```shell
+# 再启动一个tomcat（目前启动了两个容器），可以发现多出了两对网络
+[root@localhost tomcat]# docker ps 
+CONTAINER ID   IMAGE           COMMAND             CREATED              STATUS              PORTS                                         NAMES
+a6debd18313a   tomcat:9.0.45   "catalina.sh run"   About a minute ago   Up About a minute   0.0.0.0:49155->8080/tcp, :::49155->8080/tcp   tomcat02
+5cb8a312e628   tomcat:9.0.45   "catalina.sh run"   10 minutes ago       Up 10 minutes       0.0.0.0:49154->8080/tcp, :::49154->8080/tcp   tomcat01
+[root@localhost ~]# ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: enp0s3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 08:00:27:0a:25:1f brd ff:ff:ff:ff:ff:ff
+    inet 192.168.31.37/24 brd 192.168.31.255 scope global noprefixroute dynamic enp0s3
+       valid_lft 38204sec preferred_lft 38204sec
+    inet6 fe80::ebe7:c288:c484:a011/64 scope link noprefixroute 
+       valid_lft forever preferred_lft forever
+3: docker0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 02:42:88:9a:e4:bb brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::42:88ff:fe9a:e4bb/64 scope link 
+       valid_lft forever preferred_lft forever
+# 多出的两对网络
+25: veth500cbc9@if24: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP group default 
+    link/ether 32:ad:a7:a1:8a:68 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet6 fe80::30ad:a7ff:fea1:8a68/64 scope link 
+       valid_lft forever preferred_lft forever
+27: veth155bd11@if26: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP group default 
+    link/ether 46:b6:d2:3c:ac:7d brd ff:ff:ff:ff:ff:ff link-netnsid 1
+    inet6 fe80::44b6:d2ff:fe3c:ac7d/64 scope link 
+       valid_lft forever preferred_lft forever
+```
+
+容器的网卡都是成对出现的
+veth-pair 就是一对的虚拟设备接口，他们都是成对出现的，一端连着协议，一端彼此相连
+正因为有这个特性 veth-pair 充当一个桥梁，连接各种虚拟网络设备的
+OpenStac,Docker容器之间的连接，OVS的连接，都是使用evth-pair技术
+
+> 测试tomcat01和tomcat02是否可以ping通？
+
+```shell
+# tomcat01
+[root@localhost tomcat]# docker exec -it 5cb8a312e628 /bin/bash
+root@5cb8a312e628:/usr/local/tomcat# ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+24: eth0@if25: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.17.0.2/16 brd 172.17.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+root@5cb8a312e628:/usr/local/tomcat# ping 172.17.0.3
+PING 172.17.0.3 (172.17.0.3) 56(84) bytes of data.
+64 bytes from 172.17.0.3: icmp_seq=1 ttl=64 time=0.055 ms
+64 bytes from 172.17.0.3: icmp_seq=2 ttl=64 time=0.036 ms
+
+# tomcat02
+root@a6debd18313a:/usr/local/tomcat# ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+26: eth0@if27: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 02:42:ac:11:00:03 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.17.0.3/16 brd 172.17.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+root@a6debd18313a:/usr/local/tomcat# ping 172.17.0.2
+PING 172.17.0.2 (172.17.0.2) 56(84) bytes of data.
+64 bytes from 172.17.0.2: icmp_seq=1 ttl=64 time=0.029 ms
+64 bytes from 172.17.0.2: icmp_seq=2 ttl=64 time=0.041 ms
+```
+
+所以容器之间是可以互相ping通的
+
+## docker网络模型图
+
+![](https://cdn.jsdelivr.net/gh/mrlsss/images//Docker/docker%E7%BD%91%E7%BB%9C01.png)
+
+结论：tomcat01和tomcat02共用一个路由器（docker0）
+
+所有的容器不指定网络的情况下，都是docker0路由的，docker会给我们的容器分配一个默认可用的ip。
+
+Docker使用的是Linux的桥接模式，宿主机是一个Docker容器的网桥docker0
+
+![](https://cdn.jsdelivr.net/gh/mrlsss/images//Docker/docker%E7%BD%91%E7%BB%9C02.png)
+
+Docker中所有网络接口都是虚拟的，虚拟的转发效率高（内网传递文件）
+
+只要容器删除，对应的网桥一对就没了。
+
+> 我们编写了一个微服务，database url=ip: 项目不重启，数据库ip换了，我们希望可以处理这个问题，可以通过名字来进行访问容器？
+
+## --link
+
+```shell
+# 测试，直接通过容器名称来ping
+
+[root@localhost tomcat]# docker exec -it tomcat02 ping tomcat01
+ping: tomcat01: No address associated with hostname # 无法ping通
+
+# 运行一个tomcat01 --link tomcat02
+[root@localhost tomcat]# docker run -d -P --name tomcat03 --link tomcat02 tomcat:9.0.45
+24988d101183d9741b328ca783563b55cdd00507bc09d5e6aa3a8d3be85fe4d9
+[root@localhost tomcat]# docker exec -it tomcat03 ping tomcat02
+PING tomcat02 (172.17.0.2) 56(84) bytes of data. # 通过容器名称可以ping通
+64 bytes from tomcat02 (172.17.0.2): icmp_seq=1 ttl=64 time=0.049 ms
+64 bytes from tomcat02 (172.17.0.2): icmp_seq=2 ttl=64 time=0.035 ms
+# 通过 docker run --link 运行的容器，可以通过容器名称ping通
+
+# 而tomcat02是不能ping通tomcat03的
+[root@localhost tomcat]# docker exec -it tomcat02 ping tomcat03
+ping: tomcat03: No address associated with hostname
+
+# 原因
+[root@localhost tomcat]# docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+2c71cb1bfda1   bridge    bridge    local
+de3443baca54   host      host      local
+c2d53c2daf47   none      null      local
+[root@localhost tomcat]# docker network inspect 2c71cb1bfda1
+"Containers": {
+    "24988d101183d9741b328ca783563b55cdd00507bc09d5e6aa3a8d3be85fe4d9": {
+    "Name": "tomcat03",
+    "EndpointID": "18d51f7830237f414604f605e3696c676228031cfc79f10ac44deb9d7f7770ca",
+    "MacAddress": "02:42:ac:11:00:04",
+    "IPv4Address": "172.17.0.4/16",
+    "IPv6Address": ""
+  },
+    "34db2a3e0cd18845ac747e5166fcfd0c299c8a5a90502c5b71a1e10a2af1b759": {
+    "Name": "tomcat02",
+    "EndpointID": "c18e26a0cd2a2041e599a4766f79d4804552a6cfa006390a47503eef451c5d6a",
+    "MacAddress": "02:42:ac:11:00:02",
+    "IPv4Address": "172.17.0.2/16",
+    "IPv6Address": ""
+  },
+    "fb676056629edbaed02e2fb135371df5dc58f905d2214591fe761437b1221525": {
+    "Name": "tomcat01",
+    "EndpointID": "d19b58032ce234d41a8ea904e2d7e198af312b3a3a6a54ad3c5e9ebb3ac46a69",
+    "MacAddress": "02:42:ac:11:00:03",
+    "IPv4Address": "172.17.0.3/16",
+    "IPv6Address": ""
+  }
+},
+3个tomcat的网段都相同
+
+[root@localhost tomcat]# docker inspect tomcat03
+"Links": [
+	"/tomcat02:/tomcat03/tomcat02"
+],
+# 查看tomcat03的hosts文件，可以看到其中配置的有tomcat02的地址
+[root@localhost tomcat]# docker exec tomcat03 cat /etc/hosts
+127.0.0.1       localhost
+::1     localhost ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+172.17.0.2      tomcat02 34db2a3e0cd1
+172.17.0.4      24988d101183
+# 所以 --link本质就是在hosts配置中添加了对应的映射
+```
+
+## 自定义网络
+
+```shell
+docker network
+connect     -- Connect a container to a network
+create      -- Creates a new network with a name specified by the
+disconnect  -- Disconnects a container from a network
+inspect     -- Displays detailed information on a network
+ls          -- Lists all the networks created by the user
+prune       -- Remove all unused networks
+rm          -- Deletes one or more networks
+```
+
+查看docker所有的网络
+
+```shell
+[root@localhost tomcat]# docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+2c71cb1bfda1   bridge    bridge    local
+de3443baca54   host      host      local
+c2d53c2daf47   none      null      local
+```
+
+### 网络模式
+
+- bridge：桥接 docker（默认，自己创建也是用bridge）
+- none：不配置网络，一般不用
+- host：和宿主机共享网络
+- container：容器网络连通（用得少）
+
+测试
+
+```shell
+# 我们直接启动的命令 --net bridge，这个就是我们的docker0
+# bridge就是docker0
+docker run -d -P --name tomcat01 tomcat 等价于 => docker run -d -P --name tomcat01 --net bridge tomcat
+```
+
+docker0特点：默认，域名不能访问，可以通过 --link连接，但是很麻烦。
+
+自定义一个网络
+
+```shell
+[root@localhost tomcat]# docker network create --help
+Options:
+      --attachable           Enable manual container attachment
+      --aux-address map      Auxiliary IPv4 or IPv6 addresses used by Network driver (default map[])
+      --config-from string   The network from which to copy the configuration
+      --config-only          Create a configuration only network
+  -d, --driver string        Driver to manage the Network (default "bridge")
+      --gateway strings      IPv4 or IPv6 Gateway for the master subnet
+      --ingress              Create swarm routing-mesh network
+      --internal             Restrict external access to the network
+      --ip-range strings     Allocate container ip from a sub-range
+      --ipam-driver string   IP Address Management Driver (default "default")
+      --ipam-opt map         Set IPAM driver specific options (default map[])
+      --ipv6                 Enable IPv6 networking
+      --label list           Set metadata on a network
+  -o, --opt map              Set driver specific options (default map[])
+      --scope string         Control the network's scope
+      --subnet strings       Subnet in CIDR format that represents a network segment
+[root@localhost tomcat]# docker network create --driver bridge --subnet 192.168.0.0/16 --gateway 192.168.0.1 mynet
+746cfea596fdbe1f55ade529b2de69304b2dd4dd00015a04ef2be4f8237c3e0c
+[root@localhost tomcat]# docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+2c71cb1bfda1   bridge    bridge    local
+de3443baca54   host      host      local
+746cfea596fd   mynet     bridge    local
+c2d53c2daf47   none      null      local
+[root@localhost tomcat]# docker network inspect mynet
+[
+    {
+        "Name": "mynet",
+        "Id": "746cfea596fdbe1f55ade529b2de69304b2dd4dd00015a04ef2be4f8237c3e0c",
+        "Created": "2021-04-27T17:01:58.010998098+08:00",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": {},
+            "Config": [
+                {
+                    "Subnet": "192.168.0.0/16",
+                    "Gateway": "192.168.0.1"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Containers": {},
+        "Options": {},
+        "Labels": {}
+    }
+]
+# 再启动两个tomcat
+[root@localhost tomcat]# docker run -d --name tomcat01 -P --net mynet tomcat:9.0.45
+659251c752e04be8698cec7ad431ad1aa1713ca9b3d8975272db5e9bf8ea093e
+[root@localhost tomcat]# docker run -d --name tomcat02 -P --net mynet tomcat:9.0.45
+0c7ab3348e2b9a66f7427511a36e7f9a29c2a214bfdcc5c427653548717a1411
+[root@localhost tomcat]# docker network inspect mynet
+[
+    {
+        "Name": "mynet",
+        "Id": "746cfea596fdbe1f55ade529b2de69304b2dd4dd00015a04ef2be4f8237c3e0c",
+        "Created": "2021-04-27T17:01:58.010998098+08:00",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": {},
+            "Config": [
+                {
+                    "Subnet": "192.168.0.0/16",
+                    "Gateway": "192.168.0.1"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Containers": {
+            "0c7ab3348e2b9a66f7427511a36e7f9a29c2a214bfdcc5c427653548717a1411": {
+                "Name": "tomcat02",
+                "EndpointID": "f14a13e913587d7c7c9c1d1c15df41cd56ce90fbd3709917ebbad59356eaa0f2",
+                "MacAddress": "02:42:c0:a8:00:03",
+                "IPv4Address": "192.168.0.3/16",
+                "IPv6Address": ""
+            },
+            "659251c752e04be8698cec7ad431ad1aa1713ca9b3d8975272db5e9bf8ea093e": {
+                "Name": "tomcat01",
+                "EndpointID": "cbfe7444778a95307ad7f56c208884de6b2a30557f5ab33bfc48781d729917cc",
+                "MacAddress": "02:42:c0:a8:00:02",
+                "IPv4Address": "192.168.0.2/16",
+                "IPv6Address": ""
+            }
+        },
+        "Options": {},
+        "Labels": {}
+    }
+]
+
+# 在自定义网络下，服务可以互相ping通，不用使用--link
+[root@localhost tomcat]# docker exec tomcat01 ping tomcat02
+PING tomcat02 (192.168.0.3) 56(84) bytes of data.
+64 bytes from tomcat02.mynet (192.168.0.3): icmp_seq=1 ttl=64 time=0.038 ms
+64 bytes from tomcat02.mynet (192.168.0.3): icmp_seq=2 ttl=64 time=0.068 ms
+[root@localhost tomcat]# docker exec tomcat02 ping tomcat01
+PING tomcat01 (192.168.0.2) 56(84) bytes of data.
+64 bytes from tomcat01.mynet (192.168.0.2): icmp_seq=1 ttl=64 time=0.021 ms
+64 bytes from tomcat01.mynet (192.168.0.2): icmp_seq=2 ttl=64 time=0.051 ms
+```
+
+我们自定义的网络，docker为我们维护好了对应的关系，推荐平时这样使用网络。
+
+好处：
+
+- redis：不同的集群使用不同的网络，保证集群是安全和健康的
+
+- mysql：不同的集群使用不同的网络，保证集群是安全和健康的
+
+## 网络连通
+
+```shell
+docker network connect
+# 测试两个不同的网络连通，再启动两个tomcat 使用默认网络，即docker0
+[root@localhost tomcat]# docker run -d -P --name tomcat01 tomcat
+[root@localhost tomcat]# docker run -d -P --name tomcat02 tomcat
+# 此时无法ping通
+
+# 要将tomcat01 连通 tomcat—net-01，就是把tomcat01加到mynet网络
+# 一个容器两个ip
+[root@localhost tomcat]# docker run -d -P --name tomcat01 tomcat:9.0.45
+0324eed45de0939080ae99b8589a7ef1fd3b1751045113f2651239f946538c37
+[root@localhost tomcat]# docker network connect mynet tomcat01
+[root@localhost tomcat]# docker run -d -P --name tomcat-net-01 --net mynet tomcat:9.0.45
+e91dfe8d7466ae43de7fb679284e4cbc79d8e5282f99beb3c8d2592d9be75a6b
+[root@localhost tomcat]# docker exec tomcat-net-01 ping tomcat01
+PING tomcat01 (192.168.0.2) 56(84) bytes of data.
+64 bytes from tomcat01.mynet (192.168.0.2): icmp_seq=1 ttl=64 time=0.035 ms
+64 bytes from tomcat01.mynet (192.168.0.2): icmp_seq=2 ttl=64 time=0.070 ms
+[root@localhost tomcat]# docker exec tomcat01 ping tomcat-net-01
+PING tomcat-net-01 (192.168.0.3) 56(84) bytes of data.
+64 bytes from tomcat-net-01.mynet (192.168.0.3): icmp_seq=1 ttl=64 time=0.021 ms
+64 bytes from tomcat-net-01.mynet (192.168.0.3): icmp_seq=2 ttl=64 time=0.119 ms
+# 将tomcat01连通后，tomcat01和tomcat-net-01可以相互ping通
+# 如果不连通 docker network connect ，则无法ping通
+```
+
+假设要跨网络操作别人，就需要使用docker network connect 连通！
+
+# 部署Redis集群
+
+通过shell脚本创建6个redis
+
+```shell
+for port in $(seq 1 6);\
+do \
+mkdir -p /mydata/redis/node-${port}/conf
+touch /mydata/redis/node-${port}/conf/redis.conf
+cat << EOF >> /mydata/redis/node-${port}/conf/redis.conf
+port 6379
+bind 0.0.0.0
+cluster-enabled yes
+cluster-config-file nodes.conf
+cluster-node-timeout 5000
+cluster-announce-ip 192.168.0.1${port}
+cluster-announce-port 6379
+cluster-announce-bus-port 16379
+appendonly yes
+EOF
+done
+```
+
+通过脚本运行6个redis
+
+```shell
+for port in $(seq 1 6);\
+do \
+docker run -p 637${port}:6379 -p 1667${port}:16379 --name redis-${port} \
+-v /mydata/redis/node-${port}/data:/data \
+-v /mydata/redis/node-${port}/conf/redis.conf:/etc/redis/redis.conf \
+-d --net redis --ip 192.168.0.1${port} redis:6.0.10 redis-server /etc/redis/redis.conf
+done
+
+
+```
+
+构建集群
+
+```shell
+docker exec -it redis-1 /bin/sh #redis默认没有bash
+redis-cli --cluster create 192.168.0.11:6379 192.168.0.12:6379 192.168.0.13:6379 192.168.0.14:6379 192.168.0.15:6379 192.168.0.16:6379  --cluster-replicas 1
+```
 
